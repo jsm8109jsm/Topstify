@@ -28,6 +28,7 @@
     "react/require-default-props": "off",
     "react/no-unstable-nested-components": "off",
     "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
-    "@typescript-eslint/naming-convention": "off"
+    "@typescript-eslint/naming-convention": "off",
+    "import/prefer-default-export": "off"
   }
 }
