@@ -17,7 +17,7 @@ export default function RootLayout({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return (
-    <html lang="en">
+    <html lang="ko">
       <body>
         <QueryClientProvider client={queryClient}>
           {children}

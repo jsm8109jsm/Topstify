@@ -1,4 +1,10 @@
+"use client";
+
+import useTopItem from "@/api/user/useTopItem";
+import { useEffect } from "react";
+
 export default function Home() {
+  const { topItemList } = useTopItem();
   return (
     <div>
       <a
