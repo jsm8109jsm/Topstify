@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "react-query";
 import "./globals.css";
+import instance from "@/utils/instance";
 
 // export const metadata: Metadata = {
 //   title: "Create Next App",
@@ -16,6 +17,44 @@ export default function RootLayout({
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
+
+  instance.interceptors.response.use(
+    (res) => res,
+    async (error) => {
+      const originalRequest = error.config;
+      // console.log(error);
+      // if (typeof localStorage.refresh_token === "undefined") {
+      //   return Promise.reject(error);
+      // }
+      if (typeof localStorage.refreshToken === "undefined") {
+        return Promise.reject(error);
+      }
+      if (!localStorage.refreshToken) {
+        // setIsNeedLogin(true);
+        localStorage.removeItem("access_token");
+        return Promise.reject(error);
+      }
+      // eslint-disable-next-line no-underscore-dangle
+      if (error.response.status === 401 && !originalRequest._retry) {
+        // const refreshToken = localStorage.refresh_token;
+        // eslint-disable-next-line no-underscore-dangle
+        originalRequest._retry = true;
+        const response = await instance.post("refresh", {
+          refreshToken: localStorage.refreshToken,
+        });
+
+        if (response.status === 200) {
+          const accessToken = response.data.data;
+          localStorage.setItem("access_token", accessToken);
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return instance(originalRequest);
+        }
+        // setIsNeedLogin(true);
+      }
+
+      return Promise.reject(error);
+    },
+  );
   return (
     <html lang="ko">
       <body>
