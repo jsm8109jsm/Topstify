@@ -1,5 +1,21 @@
-import axios from "axios";
+import TopItemListType from "@/types/music/TopItemListType";
+import axios, { AxiosError } from "axios";
 import { NextResponse } from "next/server";
+
+function removeDuplicatesByPropertyName(res: TopItemListType[]) {
+  const uniqueObjects: { [x: string]: boolean } = {};
+  const resultArray: TopItemListType[] = [];
+
+  res.forEach((item: TopItemListType) => {
+    const propertyValue = item.album.albumId;
+    if (!uniqueObjects[propertyValue]) {
+      uniqueObjects[propertyValue] = true;
+      resultArray.push(item);
+    }
+  });
+
+  return resultArray;
+}
 
 export async function GET(request: Request) {
   try {
@@ -20,11 +36,19 @@ export async function GET(request: Request) {
     );
 
     const res = response?.data.items.map((item) => ({
-      name: item.name,
+      track: {
+        name: item.name,
+      },
+      album: {
+        albumId: item.album.id,
+        imageUrl: item.album.images[0].url,
+        name: item.album.name,
+      },
       artists: item.artists.map((item) => item.name),
-      imageUrl: item.album.images[0].url,
     }));
-    console.log(res);
+
+    const newArray = removeDuplicatesByPropertyName(res);
+    console.log(newArray);
 
     // const spotifyApi = new SpotifyWebApi({
     //   redirectUri: process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URL,
@@ -40,12 +64,14 @@ export async function GET(request: Request) {
     // };
 
     // console.log("response", responseData);
-    return NextResponse.json(res);
+    return NextResponse.json(newArray);
   } catch (err) {
     console.log(err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    if (err instanceof AxiosError) {
+      return NextResponse.json(
+        { error: err.response?.statusText },
+        { status: err.response?.status },
+      );
+    }
   }
 }
